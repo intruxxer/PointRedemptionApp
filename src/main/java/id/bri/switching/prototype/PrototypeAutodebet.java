@@ -17,7 +17,7 @@
  */
 
 
-package id.bri.switching.app;
+package id.bri.switching.prototype;
 
 import id.bri.switching.helper.ISO8583PSWPackager;
 
@@ -33,7 +33,7 @@ import id.bri.switching.helper.TextUtil;
 //import id.bri.switching.helper.TraceNumberGenerator;
 
 
-public class Autodebet {
+public class PrototypeAutodebet {
     
     /* 
      * Property
@@ -66,10 +66,11 @@ public class Autodebet {
      * 
      * @access      public
      * @param       String, String, String, String
+     * @return 
      * @return      String
      */
     
-    public Autodebet(String paymenttype) {
+    public PrototypeAutodebet(String paymenttype) {
         
         //  Inisialisasi
     	this.paymentType = paymenttype.trim();
@@ -161,7 +162,7 @@ public class Autodebet {
     	String b37 = "";	// bit 37 diisi payment number; generate dari CSAP
 		try{
 			if(acctNum.trim().length() == 0 || payNum.trim().length() == 0 || cardNum.trim().length() == 0){
-				LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters autodebet not complete");
+				LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters autodebet not complete");
 				return TextUtil.formattedResult("NC", payNum, "PARAMETERS NOT COMPLETE");
 			}
 			//Long.parseLong(acctNum);
@@ -169,10 +170,10 @@ public class Autodebet {
 			//Long.valueOf(payNum);
 			b37 = String.format("%012d", Long.valueOf(payNum));
 		}catch(NumberFormatException e){
-			LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters in autodebet not in correct format");
+			LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters in autodebet not in correct format");
 			return TextUtil.formattedResult("ER", payNum, e.getMessage());
 		}catch (Exception e) {
-			LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters autodebet error");
+			LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters autodebet error");
 			return TextUtil.formattedResult("ER", payNum, e.getMessage());
 		}
 		
@@ -322,7 +323,7 @@ public class Autodebet {
     	String b37 = "";	// bit 37 diisi payment number; generate dari CSAP
 		try{
 			if(acctNum.trim().length() == 0 || payNum.trim().length() == 0){
-				LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters autodebet not complete");
+				LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters autodebet not complete");
 				return TextUtil.formattedResult("NC", payNum, "PARAMETERS NOT COMPLETE");
 			}
 			//Long.parseLong(acctNum);
@@ -330,10 +331,10 @@ public class Autodebet {
 			//Long.valueOf(payNum);
 			b37 = String.format("%012d", Long.valueOf(payNum));
 		}catch(NumberFormatException e){
-			LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters in autodebet not in correct format");
+			LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters in autodebet not in correct format");
 			return TextUtil.formattedResult("ER", payNum, e.getMessage());
 		}catch (Exception e) {
-			LogLoader.setError(Autodebet.class.getSimpleName(), "Parameters autodebet error");
+			LogLoader.setError(PrototypeAutodebet.class.getSimpleName(), "Parameters autodebet error");
 			return TextUtil.formattedResult("ER", payNum, e.getMessage());
 		}
 		

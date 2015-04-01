@@ -23,48 +23,12 @@ public class PointRedeem {
 	Map<String, String> cardInfo;
 	
 	public PointRedeem(){
-		db = null;
-		con = null;
-		response = null;
-		cardInfo = new HashMap<String, String>();
+		db = null; con = null;
+		response = null; cardInfo = new HashMap<String, String>();
 	}
 	
 	//Table: lbcrdext
-	public int inquiryPoint(String cardNum, String tblName) {
-    	Statement stm = null;
-    	ResultSet rs = null;
-    	MysqlConnect db = null;
-    	int currPointBal = 0;
-		try {
-			db = new MysqlConnect(PropertiesLoader.getProperty("DB_NAME"));
-			con = db.getConnection();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-    	String pointQuery = "SELECT LB_CP_PAS_CURR_BAL FROM " + tblName + " WHERE LB_CARD_NMBR = " + cardNum;
-    	try {
-            stm = con.createStatement();
-            rs = stm.executeQuery(pointQuery);
-	    } catch (SQLException e ) {
-	        	response = "SQL exception Query Point : " + e.toString();
-	    }
-    	
-    	try {
-    		while (rs.next()){
-    			currPointBal = rs.getInt("LB_CP_PAS_CURR_BAL");
-    		}
-    	} catch (SQLException e) {
-    		e.printStackTrace();
-    	}
-    	
-    	return currPointBal;
-    }
-	
-    public Map<String, String> debetPoint(String cardNum, String tblName, String pointAmt) throws SQLException {
-    	MysqlConnect db = null;
+    public Map<String, String> debetPoint(String cardNum, String pointAmt) throws SQLException {
 		try {
 			db = new MysqlConnect(PropertiesLoader.getProperty("DB_NAME"));
 			con = db.getConnection();
@@ -74,13 +38,14 @@ public class PointRedeem {
 			e.printStackTrace();
 		}
         
-    	int currPointBal = inquiryPoint(cardNum, tblName);
+		Inquiry inq = new Inquiry();
+    	int currPointBal = inq.inquiryPointCard(cardNum);
 
     	if ( (currPointBal > 0) && (currPointBal >= Integer.parseInt(pointAmt)) ){
     		currPointBal = currPointBal - Integer.parseInt(pointAmt);
     	}
     	
-        String query = "UPDATE " + tblName  + " SET LB_CP_PAS_CURR_BAL = ? WHERE LB_CARD_NMBR = ?";
+        String query = "UPDATE lbcrdext SET LB_CP_PAS_CURR_BAL = ? WHERE LB_CARD_NMBR = ?";
         int rows = 0;
         try {
         	PreparedStatement prepStmt = con.prepareStatement(query);
@@ -93,13 +58,13 @@ public class PointRedeem {
     	}
         
         if(rows > 0){
-        	String msgResponse = "UPDATE " + tblName + " Success in" + rows +" rows.";
-        	System.out.println("Point Redeem updates? " + msgResponse);
         	cardInfo.put("cardNum", cardNum);
         	cardInfo.put("cardPoint", String.valueOf(currPointBal));
+        	String msgResponse = "UPDATE lbcrdext SUCCESS in" + rows +" rows.";
+        	System.out.println("Point Redeem updates? " + msgResponse);
         	return cardInfo;
         }else{
-        	String msgResponse = "UPDATE " + tblName + " Failed.";
+        	String msgResponse = "UPDATE lbcrdext FAILED.";
         	System.out.println("Point Redeem updates? " + msgResponse);
         	return cardInfo;
         }

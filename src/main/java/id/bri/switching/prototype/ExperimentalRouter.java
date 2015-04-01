@@ -17,8 +17,11 @@
  * ------------------------------------------------------
  */
 
-package id.bri.switching.app;
+package id.bri.switching.prototype;
 
+import id.bri.switching.app.Inquiry;
+import id.bri.switching.app.PointRedeem;
+import id.bri.switching.app.Router;
 import id.bri.switching.helper.ISO8583PSWPackager;
 import id.bri.switching.helper.LogLoader;
 import id.bri.switching.helper.ResponseCode;
@@ -36,7 +39,7 @@ import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
 
 //  Class Router
-public class Router {
+public class ExperimentalRouter {
     
     /* 
      * Property
@@ -55,23 +58,28 @@ public class Router {
      * @return      String
      */
     
-    public static synchronized String processISOMessage(String requestString) {
+    public static synchronized String startRouter(String requestString) {
         //  Menampilkan pesan masuk
         LogLoader.setInfo(Router.class.getSimpleName(), "Msg is to be verified.. ");
         String response = "";
         //  try catch ISOMsg
         try {
-            //  ISO 8583 ProSwitching Packager & ISOMsg
+            //  ISO 8583 Proswitching Packager & ISOMsg
             ISO8583PSWPackager packager = new ISO8583PSWPackager();
             ISOMsg isoMsg = new ISOMsg();
             isoMsg.setPackager(packager);
             isoMsg.unpack(requestString.getBytes());
             
-            //  Hanya melayani MTI 200 Inquiry, Trx & 800 Reversal
-            //  [1] Response dari PSW == 0200
+            //  Hanya melayani MTI 200 & 800
+            //  MTI 200 request, 800 
             if(isoMsg.getMTI().equals("0200")){
             	LogLoader.setInfo(Router.class.getSimpleName(), "Verifying the message...");
-            	// Business logic; Bit 3 defines TRX vs INQ
+            	// Business logic; bit 3 defines inquiry VS transaction
+            	// Verify the dictionary of bits to PSW Team
+            	// ----------------------------------------------------
+        		// bit 3: Proc. code; bit 48: Card Number
+            	// bit x: Status Code, bit y: Flag Card
+        		// bit 63: TrxAmtTotal & PointValue (point * 100)
             	String mti = isoMsg.getMTI();
             	String cardNum = isoMsg.getString(2).trim();
             	String procCode = isoMsg.getString(3).trim();
@@ -79,90 +87,114 @@ public class Router {
             	String trxChAmt = isoMsg.getString(5).trim();
             	String trxNetAmt = isoMsg.getString(6).trim();
             	String trxTime = isoMsg.getString(12).trim();
-            	String expDate = isoMsg.getString(14).trim();
-            	//String trxNii = isoMsg.getString(24).trim();
-            	//String rCode = isoMsg.getString(39).trim();
+            	String trxNii = isoMsg.getString(24).trim();
+            	String rCode = isoMsg.getString(39).trim();
             	String tId = isoMsg.getString(41).trim();
             	String mId = isoMsg.getString(42).trim();
-            	//String curr = isoMsg.getString(49).trim();
+            	String curr = isoMsg.getString(49).trim();
             	
-            	// TRANSACTION WITH POINT
-        		// Tabels = "lbcpcrd" [status] & "lbcrdext" [point];
-        		// Read: DB
-        		// DO: (1) Find Point Balance then Decrease it, 
-            	//     (2) Form a reply to CardLink (via PSW)
+            	
+            	//if ( isoMsg.getString(3).trim().equals("101010") && isoMsg.getString(63).trim().equals("POINT")  )
             	if(procCode.equals("101010")) {
+            		/* START
+            		 * 
+            		// TRANSACTION
+            		String tblName = "lbcrdext";
+            		// Relay to PSW 
+            		// Redeem & Update point balance within a purchase
             		
-            		// MODULE 2
-            		LogLoader.setInfo(Router.class.getSimpleName(), " with Bit[3]=101010.");
-            	}
-            	// INQUIRY
-        		// Tabels = "lbcpcrd" [status] & "lbcrdext" [point];
-        		// Read: DB
-        		// Find: (1) Status/Eligibility of Card, (2) Point Balance
-            	else if(procCode.equals("303030")) {
-            		Inquiry inq = new Inquiry();
-            		Map<String, String> resInquiry = inq.inquiryStatusCard(cardNum);
-            		System.out.println("Card Number:"+cardNum);
-            		System.out.println("Card Status:"+(String) resInquiry.get("cardStatus"));
-            		if((String) resInquiry.get("cardStatus") == "OK"){
-            			//Get the current point when cardStatus == OK
-            			int pointOfCard = inq.inquiryPointCard(cardNum);
-            			int bit63fulllength = 105; String bit63full = "";
-            			int bit63datalength = String.valueOf(pointOfCard).length();
-            			int bit63padding = bit63fulllength - bit63datalength;
-            			for(int i=0; i<bit63padding; i++){
-            				bit63full += " ";
-            			}
-            			bit63full += String.valueOf(pointOfCard);
-            			
-            			//Set ISOMsg back with Card's Status & Point. 
-            			//Obtain them via Map resInquiry Object & PointOfCard
-            			isoMsg.set(63, bit63full);
-            			//Logging TRX of INQ here
-            			Logging log = new Logging();
-            			String[] history = {
-            				mti, procCode, tId, "0", "2015", "240030", "1",
-            				mId, cardNum, expDate, cardNum, "'Inquiry PC303030'", "'CLCB_PROG'",
-            				"NULL", "NULL", "NULL", "NULL", "NULL", "00005"
-            			};
-            			log.saveRedeemHistory(history);
-                        resInquiry.clear();
-            		}else if((String) resInquiry.get("cardStatus") == "N/A"){
-            			//Do something if there's  "NOTOK", categorized as:
-            			//(1) Card is not found
-            			isoMsg.set(39, "53");
-            			resInquiry.clear();
-            		}else if((String) resInquiry.get("cardStatus") == "-PP"){
-            			//Do something if there's  "NOTOK", categorized as:
-            			//(2) Not authorized as it wasn't Primary Card
-            			isoMsg.set(39, "05");
-            			resInquiry.clear();
-            		}else if((String) resInquiry.get("cardStatus") == "-BC"){
-            			//Do something if there's  "NOTOK", categorized as:
-            			//(3) Not authorized as it wasn't in permitted Block
-            			isoMsg.set(39, "05");
-            			resInquiry.clear();
-            		}else if((String) resInquiry.get("cardStatus") == "-ST"){
-            			//Do something if there's  "NOTOK", categorized as:
-            			//(4) Not authorized as it wasn't in permitted Status
-            			isoMsg.set(39, "05");
-            			resInquiry.clear();
+            		PointRedeem pointRedeem = new PointRedeem();
+            		Map<String, String> resDeb = pointRedeem.debetPoint(cardNum, tblName, trxAmt);
+            		
+            		if(!resDeb.isEmpty()){
+            			//Set ISOMsg back with Card's Info - Obtain them via Map resDeb Object
+            			isoMsg.set(2, cardNum);
+            			isoMsg.set(4, (String) resDeb.get("cardPoint"));
+                        
+                        resDeb.clear();
+            		}else{
+            			//Update is failed.
             		}
             		
-            		LogLoader.setInfo(Router.class.getSimpleName(), " with Bit[3]=303030.");
+            		END */
+            		
+            		//DB exploration
+            		/*
+            		int rows = 0;
+            		//ResultSet rs = null;
+            		Statement stm = null;
+            		
+            		try {	    	
+            	    	String db_user = "pointman"; String db_pass = "point2015";
+            	       
+            	        Class.forName("com.mysql.jdbc.Driver");
+            	        //String url = "jdbc:mysql://128.199.102.160:3306/clcb_module";
+            	        String url = "jdbc:mysql://127.0.0.1:3306/clcb_module";
+            	        Connection con = DriverManager.getConnection(url, db_user, db_pass);
+            	        
+            	        String insertActiveMQ = "INSERT INTO `clcb_module`.`activemq` " + 
+            	        						"(`mti`, `ch_cardnum`, `proc_code`, `trx_ori_amt`, `trx_ch_amt`, `trx_net_amt`, `trx_curr`, `trx_time`, `trx_nii`, `res_code`, `t_id`, `m_id`)" + 
+            	        						" VALUES ('"+ mti +"', '"+ cardNum +"', '"+ procCode +"', '"+ trxOriAmt  +"', '"+
+            	        						trxChAmt +"', '"+ trxNetAmt +"', '"+ curr +"', '"+ trxTime +"', '"+ trxNii +"', '"+ rCode +"', '"+ tId +"', '"+ mId +"')";
+            	        
+            	        //String queryPointActiveMQ = "SELECT LB_CP_PAS_CURR_BAL FROM `clcb_module`.`lbcrdext` WHERE LB_CARD_NMBR = '" + cardNum + "'";
+            	        
+            	        stm = con.createStatement();
+                        rows = stm.executeUpdate(insertActiveMQ);
+            	        //rs = stm.executeQuery(queryPointActiveMQ);
+            	        
+                        
+                        if (rows > 0){
+                    	   System.out.println("");
+                    	   System.out.print("Inserting activeMQ to DB is successful for: "+ requestString);
+                        }
+            	        //while (rs.next()){
+                    	//   System.out.println("");
+                    	//   System.out.print("Inserting activeMQ to DB is successful for: "+ requestString);
+                        //}
+					
+                	} catch (SQLException e) {
+                		e.printStackTrace();
+                	} catch (ClassNotFoundException e) {
+            			e.printStackTrace();
+            		}
+            		End DB Exploration*/
+            		
+            		//System.out.println("C:"+cardNum+"|PC:"+procCode+"|T:"+trxAmt);
+            		LogLoader.setInfo(Router.class.getSimpleName(), " is in 101010 Proc Code");
+            	}
+            	else if(procCode.equals("303030")) {
+            		// INQUIRY
+            		String tblName = "lbccpcrd";
+            		// Read: DB
+            		// Find: (1) Status/Eligibility of Card, (2) Point balance
+            		Inquiry inq = new Inquiry();
+            		Map<String, String> resInquiry = inq.inquiryStatusCard(cardNum);
+            		if(!resInquiry.isEmpty()){
+            			//Get the current point when cardStatus == OK
+            			int pointOfCard = inq.inquiryPointCard(cardNum);
+            			
+            			//Set ISOMsg back with Card's Status - Obtain them via Map resInquiry Object & pointOfCard
+            			isoMsg.set(38, String.valueOf(pointOfCard));
+            			isoMsg.set(2, (String) resInquiry.get("cardNum"));
+            			isoMsg.set(4, (String) resInquiry.get("cardStatus"));
+                        resInquiry.clear();
+            		}else{
+            			//Do something if there's no point available/Card is inactive/Card is not found
+            		}
+            		
+            		LogLoader.setInfo(Router.class.getSimpleName(), " is in 303030 Proc Code");
                 	
             	}
             	
             	//Set response Code, set response MTI accordingly
-            	//You can set other bits accordingly such as: isoMsg.set(39, "10");
+            	isoMsg.set(39, "10");
             	isoMsg.setResponseMTI();
                 response = new String(isoMsg.pack());
 
             }
-            //[2] Response dari PSW == 0800
-        	// Contoh, bila ada request REVERSAL
-            else if (isoMsg.getMTI().equals("0800")){
+            else if (isoMsg.getMTI().equals("0810")){
+            	// Response dari MQ == 0810
             	LogLoader.setInfo(Router.class.getSimpleName(), "Test connection response received. MTI: " + isoMsg.getMTI());            	
             }
             

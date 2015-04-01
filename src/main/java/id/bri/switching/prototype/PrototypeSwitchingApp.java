@@ -18,7 +18,7 @@
  * ------------------------------------------------------
  */
 
-package id.bri.switching.app;
+package id.bri.switching.prototype;
 
 import id.bri.switching.helper.LogLoader;
 import id.bri.switching.helper.MQHelper;
@@ -31,7 +31,7 @@ import javax.jms.TextMessage;
 import javax.jms.Message;
 
 //  Class SwitchingApp
-public class SwitchingApp {
+public class PrototypeSwitchingApp {
     
     /* 
      * Parameter

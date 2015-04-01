@@ -1,4 +1,4 @@
-package id.bri.switching.app;
+package id.bri.switching.prototype;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +12,7 @@ import id.bri.switching.helper.MsSqlConnect;
 import id.bri.switching.helper.PropertiesLoader;
 import id.bri.switching.helper.TextUtil;
 
-public class Verification {
+public class PrototypeVerification {
 	
 	/**
 	 * Variables
@@ -32,7 +32,7 @@ public class Verification {
      * @access      public
      */
     
-    public Verification (String cardNum, String borndate) throws ParseException {
+    public PrototypeVerification (String cardNum, String borndate) throws ParseException {
         
         //  Inisialisasi
     	this.paymentCurrency = "IDR";
@@ -105,21 +105,21 @@ public class Verification {
 	            }
 	            else {
 	            	res = "25"; // born date not match
-                	LogLoader.setInfo(Verification.class.getSimpleName(), "ERROR respon25: BORNDATEDB = "+ borndatedb + ", BORNDATE = " + bornDateStr);
+                	LogLoader.setInfo(PrototypeVerification.class.getSimpleName(), "ERROR respon25: BORNDATEDB = "+ borndatedb + ", BORNDATE = " + bornDateStr);
 	            }
             } else { // born date is null
             	res = "53";
-            	LogLoader.setInfo(Verification.class.getSimpleName(), "ERROR respon53: BORNDATEDB = "+ borndatedb + ", BORNDATE = " + bornDateStr);
+            	LogLoader.setInfo(PrototypeVerification.class.getSimpleName(), "ERROR respon53: BORNDATEDB = "+ borndatedb + ", BORNDATE = " + bornDateStr);
 
             }
         }
         catch (SQLException e) {
             //responseCode = "92";
-        	LogLoader.setError(Verification.class.getSimpleName(), "db except 1: "+ e.getLocalizedMessage());
+        	LogLoader.setError(PrototypeVerification.class.getSimpleName(), "db except 1: "+ e.getLocalizedMessage());
         } catch (ClassNotFoundException e) {
         	e.printStackTrace();
         } catch (NullPointerException e) {
-        	LogLoader.setError(Verification.class.getSimpleName(), "null pointer exception when parsing born date");
+        	LogLoader.setError(PrototypeVerification.class.getSimpleName(), "null pointer exception when parsing born date");
         	res = "53";
         } finally {
             try {
@@ -137,7 +137,7 @@ public class Verification {
                 }
             } catch (SQLException e) {
                 //responseCode = "92";
-                LogLoader.setError(Verification.class.getSimpleName(), "db except 2: "+ e.getLocalizedMessage());
+                LogLoader.setError(PrototypeVerification.class.getSimpleName(), "db except 2: "+ e.getLocalizedMessage());
             }
         }
         return res;

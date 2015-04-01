@@ -17,10 +17,10 @@
  */
 
 package id.bri.switching.helper;
-import id.bri.switching.app.SwitchingApp;
 
 import java.io.IOException;
 //import java.util.Enumeration;
+
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -38,6 +38,7 @@ import javax.jms.TextMessage;
 
 
 //import java.util.Random;
+
 
 
 
@@ -178,7 +179,7 @@ public class MQHelper {
 	        session.close();
     		return null;
     	} catch (NullPointerException e) {
-        	LogLoader.setError(SwitchingApp.class.getSimpleName(), "No message from ProSW");
+        	LogLoader.setError(MQHelper.class.getSimpleName(), "No message from ProSW");
         	consumer.close();
 	        producer.close();
 	        session.close();
@@ -242,7 +243,7 @@ public class MQHelper {
 	        session.close();
     		return null;
     	} catch (NullPointerException e) {
-        	LogLoader.setError(SwitchingApp.class.getSimpleName(), "No message from ProSW");
+        	LogLoader.setError(MQHelper.class.getSimpleName(), "No message from ProSW");
         	consumer.close();
 	        producer.close();
 	        session.close();

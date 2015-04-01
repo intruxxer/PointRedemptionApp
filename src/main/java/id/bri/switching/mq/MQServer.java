@@ -53,55 +53,10 @@ public class MQServer implements MessageListener {
     public void setConnection(Connection conn) {
     	connection = conn;
     }
-	
-	public synchronized void openConnection(String mqUrl) {
-        try {        	
-	    	//Connection to activeMQ
-	    	ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(mqUrl);
-	    	this.connection = connectionFactory.createConnection();
-	        this.connection.start();
-	        
-        } catch (JMSException e) {
-        	if (e.getLinkedException() instanceof IOException) {
-                // ActiveMQ is not running. Do some logic here.
-                // use the TransportListener to restart the activeMQ connection
-                // when activeMQ comes back up.
-        		
-        	} else if (e.getMessage().contains("Connection refused")) {
-        		LogLoader.setError(MQServer.class.getSimpleName(), "Cannot connect to MQ, connection refused");
-        	} else {
-        		LogLoader.setError(MQServer.class.getSimpleName(), "Cannot connect to MQ, error unknown");
-        	}
-        }
-    }
-	
-	public void setupMessageConsumer(String messageQueueRequest, String messageQueueResponse) {
-		try {
-			if (this.connection == null) {	// check connection
-	    		openConnection(PropertiesLoader.getProperty("MQ_URL"));
-	    	}
-			this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
-			Destination requestQueue = this.session.createQueue(messageQueueRequest);
-			MessageConsumer consumer = this.session.createConsumer(requestQueue);
-	        consumer.setMessageListener(this); // Trigger this.onMessage(Message message)
-	        
-			//This messageQueueProducer() is producer's instance being used later on  [when void onMessage() triggered],
-			//because void onMessage() is triggered automatically due to its nature as a must-be-override interface;
-			//This approach is carried out as a way of global variable for void onMessage() to determine
-			//MQ Topic to which an MQ Server will put a response to.
-			this.messageQueueProducer = messageQueueResponse;
-	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener: ON");
-						
-		} catch (JMSException e) {
-			LogLoader.setError(MQServer.class.getSimpleName(), e);
-		} catch (Exception e) {
-			LogLoader.setError(MQServer.class.getSimpleName(), e);
-		}	
-	}
-	
-	public void onMessage(Message message) {
+    
+    public void onMessage(Message message) {
         try {
-            
+        	LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener: ON and Processing...");
             if (message instanceof TextMessage) {
                 TextMessage txtMsg = (TextMessage) message;
                 String messageText = txtMsg.getText();
@@ -111,10 +66,10 @@ public class MQServer implements MessageListener {
                 // Here, ISOMessage is unpacked, extracted, and processed according to our business logic.
                 // Upon unpacking from ISO to data, it is then we can proceed for executing our business logics,
                 // Hence, dig out & play around with business logic in your DB apps;
-                String result = Router.startRouter(messageText);
+                String result = Router.processISOMessage(messageText);
                 //String result = "The Peak Message isThe Recently Published One"; -->For Testing only
                 
-                //System.out.println(result);
+                System.out.println(result);
                 
                 // CHECK HERE; DO WE NEED TO SEND BACK?
                 // If result !=  empty, there is message to send back as response upon receiving message
@@ -144,21 +99,62 @@ public class MQServer implements MessageListener {
 	    	        this.replyProducer.send(response);
 	    	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Sending verification message: success. ");
                 } else {
-                	LogLoader.setInfo(MQServer.class.getSimpleName(), "There is incoming message, but no response needed");
+                	LogLoader.setInfo(MQServer.class.getSimpleName(), "There is incoming message, but no response needed.");
                 }
             }            
         } catch (JMSException e) {
             //Handle the exception appropriately
         	LogLoader.setError(MQServer.class.getSimpleName(), e);
-        } /*finally {
-        	try {
-	        	if (this.replyProducer != null)
-	        		this.replyProducer.close();
-	        	if (this.session != null)
-	        		this.session.close();
-        	} catch (JMSException jmse) {
-        		LogLoader.setError(MQServer.class.getSimpleName(), jmse);
-        	}        	
-        }*/
+        } 
     }
+	
+	public synchronized void openConnection(String mqUrl) {
+        try {        	
+	    	//Connection to activeMQ
+	    	ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(mqUrl);
+	    	this.connection = connectionFactory.createConnection();
+	        this.connection.start();
+	        
+        } catch (JMSException e) {
+        	if (e.getLinkedException() instanceof IOException) {
+                // ActiveMQ is not running. Do some logic here.
+                // use the TransportListener to restart the activeMQ connection
+                // when activeMQ comes back up.
+        		
+        	} else if (e.getMessage().contains("Connection refused")) {
+        		LogLoader.setError(MQServer.class.getSimpleName(), "Cannot connect to MQ, connection refused");
+        	} else {
+        		LogLoader.setError(MQServer.class.getSimpleName(), "Cannot connect to MQ, error unknown");
+        	}
+        }
+    }
+	
+	public void setupMessageConsumer(String messageQueueRequest, String messageQueueResponse) {
+		try {
+			if (this.connection == null) {	
+				// check connection
+	    		openConnection(PropertiesLoader.getProperty("MQ_URL_LOCALHOST"));
+	    		LogLoader.setInfo(MQServer.class.getSimpleName(), "Connection to activeMQ re-established...");
+	    	}
+			System.out.println(messageQueueRequest+"|"+messageQueueResponse);
+			this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);  
+			Destination requestQueue = this.session.createQueue(messageQueueRequest);
+			MessageConsumer consumer = this.session.createConsumer(requestQueue);
+			consumer.setMessageListener(this); // Finally, Trigger this.onMessage(Message message)
+			this.connection.start();
+			//This messageQueueProducer() is producer's instance being used later on  [when void onMessage() triggered],
+			//because void onMessage() is triggered automatically due to its nature as a must-be-override interface;
+			//This approach is carried out as a way of global variable for void onMessage() to determine
+			//MQ Topic to which an MQ Server will put a response to.
+			this.messageQueueProducer = messageQueueResponse;
+			
+	        LogLoader.setInfo(MQServer.class.getSimpleName(), "Listener is starting...");
+	        
+		} catch (JMSException e) {
+			LogLoader.setError(MQServer.class.getSimpleName(), e);
+		} catch (Exception e) {
+			LogLoader.setError(MQServer.class.getSimpleName(), e);
+		}	
+	}
+	
 }

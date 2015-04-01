@@ -31,17 +31,19 @@ public class ExperimentalPSWsimulatorPSW {
 	        
 	        //Packing an ISO Message
 	        isoMsg.setMTI("0200"); //Type: Financial Req  (4)
-	        isoMsg.set(2, "   5259678945688902"); //CH No (19)
-			isoMsg.set(3, "101010"); //Trx/Proc code (6)
-			isoMsg.set(4, "    10500000"); //Trx Amt 1,25jt (12)
-			isoMsg.set(5, "    10500000"); //1,25jt Settlement (to Merchant) (12)
-			isoMsg.set(6, "     5520000"); //1,20jt Settlement (to CH) (12)
-			isoMsg.set(12,"150330");// Time (6)
+	        isoMsg.set(2, "   5188280232469701"); //CH No (19)
+			isoMsg.set(3, "303030"); //Trx/Proc code (6)
+			isoMsg.set(4, "   126000000"); //Trx Amt 1,25jt (12)
+			isoMsg.set(5, "   126000000"); //1,25jt Settlement (to Merchant) (12)
+			isoMsg.set(6, "   115520000"); //1,15jt Settlement (to CH) (12)
+			isoMsg.set(12,"150324");// Date (6)
+			isoMsg.set(14,"0618");// Expiration Date (4)
 			isoMsg.set(24, "015"); //NII - Net Int'l Identifier (3)
-			isoMsg.set(39, "10"); //Response Code (2)
-			isoMsg.set(41, "          123457"); // Terminal ID (16)
+			isoMsg.set(39, "00"); //Response Code (2)
+			isoMsg.set(41, "          223452"); // Terminal ID (16)
 			isoMsg.set(42, "          12346"); //Merchant ID (15)
-			isoMsg.set(49, "SGD"); //Currency Trx (3)
+			isoMsg.set(49, "IDR"); //Currency Trx (3)
+			isoMsg.set(50, "IDR"); //Currency Settlement (3)
 			byte[] result = isoMsg.pack();
 			
 			// Produce output ISO 8583 Message String to IO stream
@@ -56,7 +58,8 @@ public class ExperimentalPSWsimulatorPSW {
 				try { 
 					MQClient mqclient = new MQClient();
 					mqclient.openConnection("tcp://128.199.102.160:61616");
-				    mqclient.setupMessageProducer("PswPoint.Request", isoMessage);
+					//mqclient.openConnection("tcp://127.0.0.1:61616");
+				    mqclient.setupMessageProducer("PSWLinux0Rdm.Request", isoMessage);
 				} catch (JMSException e) {
 			        	if (e.getLinkedException() instanceof IOException) {
 			                // ActiveMQ is not running. Do some logic here.

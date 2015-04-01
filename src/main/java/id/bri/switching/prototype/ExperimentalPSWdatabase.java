@@ -21,9 +21,9 @@ import id.bri.switching.mq.*;
 public class ExperimentalPSWdatabase {
 
 	public static void main(String[] args) {
-		Statement stm = null;
-		ResultSet rs = null;
-		
+		//Statement stm = null;
+		//ResultSet rs = null;
+		int rows = 0;
 		try {	    	
 	    	String db_user = "pointman";
 	        String db_pass = "point2015";
@@ -33,13 +33,23 @@ public class ExperimentalPSWdatabase {
 	    	//connection = DriverManager.getConnection(url, db_user, db_pass);
 	       
 	        Class.forName("com.mysql.jdbc.Driver");
-	        String url = "jdbc:mysql://128.199.102.160:3306/clcb_module";
+	        //String url = "jdbc:mysql://128.199.102.160:3306/clcb_module";
+	        String url = "jdbc:mysql://127.0.0.1:3306/clcb_module";
 	        Connection con = DriverManager.getConnection(url, db_user, db_pass);
 	        
-	        String pointQuery = "SELECT LB_CP_PAS_CURR_BAL FROM lbcrdext WHERE LB_CARD_NMBR = 5188280232465600";
-	        stm = con.createStatement();
-            rs = stm.executeQuery(pointQuery);
+	        //String pointQuery = "SELECT LB_CP_PAS_CURR_BAL FROM lbcrdext WHERE LB_CARD_NMBR = 5188280232465600";
+	        //stm = con.createStatement();
+            //rs = stm.executeQuery(pointQuery);
+	        Logging log = new Logging();
+			String[] history = {
+				"0", "3", "41", "0", "0", "150401", "39",
+				"42", "35", "14", "35", "'Inquiry PC303030'", "'CLCB-PROG'",
+				"NULL", "NULL", "NULL", "NULL", "NULL", "0005"
+			};
+			
+			log.saveRedeemHistory(history);
             
+			/*
             try {
         		while (rs.next()){
         			System.out.println(String.valueOf(rs.getInt("LB_CP_PAS_CURR_BAL")));
@@ -47,6 +57,7 @@ public class ExperimentalPSWdatabase {
             }catch (SQLException e) {
         		e.printStackTrace();
         	}
+        	*/
 
     	} catch (SQLException e) {
     		e.printStackTrace();

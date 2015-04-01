@@ -25,7 +25,8 @@ public class ExperimentalPSWactiveMQdatabase {
 		//ResultSet rs = null;
     
 	    MQServer mqserver = new MQServer();
-		mqserver.openConnection("tcp://128.199.102.160:61616");
+		//mqserver.openConnection("tcp://128.199.102.160:61616");
+		mqserver.openConnection("tcp://127.0.0.1:61616");
 		//Listening/Subscribe to "PswPoint.Request", Response/Publish to "PswPoint.Response"
 		mqserver.setupMessageConsumer("PswPoint.Request", "PswPoint.Response");
 		

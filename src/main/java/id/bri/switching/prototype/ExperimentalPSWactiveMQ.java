@@ -19,6 +19,7 @@ import id.bri.switching.mq.*;
 public class ExperimentalPSWactiveMQ {
 	// Require:  iptables -A INPUT -i eth0 -p tcp --destination-port [PortNo] -j ACCEPT 
 	// e.g. 3306 for MySQL [PortNo], 61616 for ActiveMQ
+	// NOTES: MYSQL: Edit "/etc/mysql/my.cnf" of "bind-address" to be your public IP address
 	public static void main(String[] args) {
 		try{
 			//String isoMessage = "";
@@ -72,11 +73,10 @@ public class ExperimentalPSWactiveMQ {
 			//2 (a)
 			//Subscriber to ActiveMQ; 
 	        //also acting as Response Publisher if necessary (depending on what we receive from PSW)
-			
 			MQServer mqserver = new MQServer();
 		    mqserver.openConnection("tcp://128.199.102.160:61616");
 		    //Listening/Subscribe to "PswPoint.Request", Response/Publish to "PswPoint.Response"
-		    mqserver.setupMessageConsumer("PswPoint.Request", "PswPoint.Response");
+		    mqserver.setupMessageConsumer("PSWLinux0Rdm.Request", "PSWLinux0Rdm.Response");
 			
 		    //2 (b)
 	        //Unpacking an ISO Message obtained from ActiveMQ

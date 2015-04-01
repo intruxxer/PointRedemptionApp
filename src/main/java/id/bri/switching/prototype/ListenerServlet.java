@@ -1,4 +1,4 @@
-package id.bri.switching.app;
+package id.bri.switching.prototype;
 /*
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
