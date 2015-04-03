@@ -70,7 +70,8 @@ public class MQClient implements MessageListener {
  
             //Setup a message producer to send message to the queue the server is consuming from
             this.producer = session.createProducer(adminQueue);
-            this.producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            //this.producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
  
             //Create a temporary queue that this client will listen for responses on then create a consumer
             //that consumes message from this temporary queue...for a real application a client should reuse

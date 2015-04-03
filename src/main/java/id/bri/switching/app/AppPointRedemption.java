@@ -21,7 +21,8 @@ public class AppPointRedemption {
 				
 		mqserver = new MQServer();
 		//mqserver.openConnection("tcp://127.0.0.1:61616");
-		mqserver.openConnection("tcp://128.199.102.160:61616");
+		//mqserver.openConnection("tcp://128.199.102.160:61616");
+		mqserver.openConnection("tcp://10.207.11.206:61616");
 		mqserver.setupMessageConsumer("PSWLinux0Rdm.Request", "PSWLinux0Rdm.Response");
 		
 	}
